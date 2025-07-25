@@ -6,10 +6,17 @@ Hey this is an attempt to create some custom networking on top of crabgame netwo
 commands :
 
 /msg "message"
+
 /party create "name"
+
 /party create "name" private
+
 /party join "name"
+
 /party list
+
 /party leave
+
 /party member
+
 /party kick "username"
