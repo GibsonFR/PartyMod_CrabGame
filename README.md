@@ -19,4 +19,6 @@ commands :
 
 /party member
 
+/party delete
+
 /party kick "username"
