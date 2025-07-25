@@ -26,8 +26,9 @@
         {
             if (args.IsEmpty) return Array.Empty<string>();
 
-            return new string[] { args.ToString() };
+            return args.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         }
+
     }
 
 }
