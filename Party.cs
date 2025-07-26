@@ -150,7 +150,7 @@
         {
             string content = $"[GMF] party {type} {partyName} {who}";
             var packets = CreateGMFPacket(content);
-            foreach (var id in modUsers)
+            foreach (var id in connectedModUsers)
                 SendGMFPacket(id.Key, packets);
         }
 
@@ -182,6 +182,7 @@
                 case "party_join_request":
                     {
                         var ownerId = GetPartyMembers(partyName).FirstOrDefault();
+
                         if (clientId == ownerId)
                         {
                             var joinerPersona = GetPersonaName(targetId);
@@ -523,8 +524,58 @@
             }
         }
 
+        public static void HandleChatCommand(string input)
+        {
+            var arg = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (arg.Length != 2)
+            {
+                ForceMessage("Usage: /chat <hide|show>");
+                return;
+            }
 
+            string command = arg[1].ToLowerInvariant();
 
+            switch (command)
+            {
+                case "hide":
+                    CustomChatboxUtility.ChatEnable(false);
+                    break;
+                case "show":
+                    CustomChatboxUtility.ChatEnable(true);
+                    break;
+                default:
+                    ForceMessage("Unknown /chat command.");
+                    break;
+            }
+        }
+
+        public static void HandleNetCommand(string input)
+        {
+            var arg = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (arg.Length != 2)
+            {
+                ForceMessage("Usage: /net <force>");
+                return;
+            }
+
+            string command = arg[1].ToLowerInvariant();
+
+            switch (command)
+            {
+                case "force":
+                    ModUserSyncManager.ForceBroadcastPing();
+                    break;
+                default:
+                    ForceMessage("Unknown /net command.");
+                    break;
+            }
+        }
+
+        public static void HandleHelpCommand()
+        {
+            ForceMessage("/party <create|join|leave|delete|list|member|kick>");
+            ForceMessage("/msg | /net force | /chat <hide/show>");
+        }
         public static void SyncPartyLobby()
         {
             string partyName = GetPartyOf(clientId);

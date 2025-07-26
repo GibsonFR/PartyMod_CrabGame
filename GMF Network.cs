@@ -5,46 +5,18 @@
         [HarmonyPatch(typeof(ServerHandle), nameof(ServerHandle.Ping))]
         [HarmonyPrefix]
         public static bool OnServerHandlePing(ulong __0, Packet __1)
-        {
-            if (!PacketUtils.TryParsePacket(__1, out var mem, out var senderId))
-            {
-              
-                return true;
-            }
+        {    
+            if (!PacketUtility.TryParsePacket(__1, out var mem, out var senderId)) return true;
+            if (PacketUtility.IsDuplicatePacket(mem)) return false;
+            
+            string payload = PacketUtility.DecodeUTF8(mem);
 
-            if (PacketUtils.IsDuplicatePacket(mem))
-            {
+            if (!GMFParser.TryParseCommand(payload.AsSpan(), out var type, out var argsSpan)) return true;
+            string[] args = GMFParser.ExtractArgs(argsSpan);
 
-                return false;
-            }
-
-            var payload = PacketUtils.DecodeUTF8(mem);
-
-
-            if (!GMFParser.TryParseCommand(payload.AsSpan(), out var type, out var argsSpan))
-            {
-
-                return true;
-            }
-
-
-
-            var args = GMFParser.ExtractArgs(argsSpan);
-
-
-            if (type == "chat")
-            {
-                PartyChatManager.HandleGMFChatPacket(args);
-            }
-            else if (type == "party")
-            {
-                PartyUtility.HandleGMFPartyPacket(args, senderId);
-            }
-            else if (type == "ping" && args.Length > 0 && ulong.TryParse(args[0], out var pingId))
-            {
-
-                ModUserSyncManager.HandlePingPacket(pingId);
-            }
+            if (type == "chat") CustomChatboxUtility.HandleGMFChatPacket(args);
+            else if (type == "party") HandleGMFPartyPacket(args, senderId);
+            else if (type == "ping" && args.Length > 0 && ulong.TryParse(args[0], out var pingId)) ModUserSyncManager.HandlePingPacket(pingId);
 
             return false;
         }
@@ -53,42 +25,20 @@
         [HarmonyPrefix]
         public static bool OnClientHandleReceiveSerializedDrop(Packet __0)
         {
-            if (!PacketUtils.TryParsePacket(__0, out var mem, out var senderId))
-            {
-                return true;
-            }
+            if (!PacketUtility.TryParsePacket(__0, out var mem, out var senderId)) return true;
+            if (PacketUtility.IsDuplicatePacket(mem)) return false;
 
-            if (PacketUtils.IsDuplicatePacket(mem))
-            {
-                return false;
-            }
+            string payload = PacketUtility.DecodeUTF8(mem);
 
-            var payload = PacketUtils.DecodeUTF8(mem);
+            if (!GMFParser.TryParseCommand(payload.AsSpan(), out var type, out var argsSpan)) return true;
+            string[] args = GMFParser.ExtractArgs(argsSpan);
 
-            if (!GMFParser.TryParseCommand(payload.AsSpan(), out var type, out var argsSpan))
-            {
-                return true;
-            }
-
-
-            var args = GMFParser.ExtractArgs(argsSpan);
-
-
-            if (type == "chat")
-            {
-                PartyChatManager.HandleGMFChatPacket(args);
-            }
-            else if (type == "party")
-            {
-                PartyUtility.HandleGMFPartyPacket(args, senderId);
-            }
-            else if (type == "ping" && args.Length > 0 && ulong.TryParse(args[0], out var pingId))
-            {
-                ModUserSyncManager.HandlePingPacket(pingId);
-            }
+            if (type == "chat") CustomChatboxUtility.HandleGMFChatPacket(args);
+            else if (type == "party") HandleGMFPartyPacket(args, senderId);
+            else if (type == "ping" && args.Length > 0 && ulong.TryParse(args[0], out var pingId)) ModUserSyncManager.HandlePingPacket(pingId);
+            
 
             return false;
         }
-
     }
 }

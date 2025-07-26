@@ -1,19 +1,30 @@
-﻿namespace PartyMod
-{
-    public class CustomChatBox : MonoBehaviour
-    {
-        public static CustomChatBox Instance;
+﻿using static PartyMod.CustomChatboxUtility;
+using static PartyMod.CustomChatBoxManager;
 
-        public static Text chatDisplay;
-        public static InputField chatInput;
-        private bool inputActive, isCustomChatBoxCreated;
+namespace PartyMod
+{
+    public class CustomChatBoxManager : MonoBehaviour
+    {
+        public static CustomChatBoxManager Instance;
+
+        public static Text inputField, messagesDisplay;
+        public static InputField chatInput, messagesInput;
+        public bool inputActive, isCustomChatBoxCreated, chatCreated;
+
+        public static List<string> messages = new();
 
         void Update()
         {
             if (ChatBox.Instance != null && !isCustomChatBoxCreated)
             {
                 isCustomChatBoxCreated = true;  
-                CreateIfNeeded();
+                InputFieldBuilder.CreateInputField();
+            }
+
+            if (ChatBox.Instance != null && !chatCreated)
+            {
+                chatCreated = true;
+                ChatBoxBuilder.CreateChatBox();
             }
 
             if (!inputActive && Input.GetKeyDown(KeyCode.Return))
@@ -22,7 +33,7 @@
                 inputActive = true;
                 chatInput.interactable = true;
                 chatInput.gameObject.SetActive(true);
-       
+                
                 chatInput.ActivateInputField();
             }
             else if (inputActive && Input.GetKeyDown(KeyCode.Return))
@@ -41,92 +52,26 @@
             }
 
         }
+    }
 
-        public static void CreateIfNeeded()
+    public class CustomChatboxUtility
+    {
+      
+        public static void AppendMessage(string text)
         {
-            if (Instance != null) return;
-
-            Canvas parentCanvas = GameObject.FindObjectsOfType<Canvas>()
-                .FirstOrDefault(c => c.renderMode != RenderMode.WorldSpace);
-            if (parentCanvas == null)
+            if (text.StartsWith("/msg"))
             {
-                Debug.LogError("[CustomChatBox] Canvas non trouvé !");
-                return;
+                string message = Regex.Replace(text.Substring(5), "<.*?>", string.Empty);
+                SendSecuredMessage(message);
             }
-
-            var go = new GameObject("CustomChatBox");
-            go.transform.SetParent(parentCanvas.transform, false);
-
-            var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 0);
-            rt.anchorMax = new Vector2(0, 0);
-            rt.pivot = new Vector2(0, 0);
-            rt.localScale = Vector3.one;
-            rt.localRotation = Quaternion.identity;
-            rt.anchoredPosition3D = new Vector3(35, 22, 0);
-            rt.sizeDelta = new Vector2(400, 150);
-
-            var bg = go.AddComponent<Image>();
-            bg.color = new Color(0.12f, 0.18f, 0.12f, 0f);
-
-            var displayObj = new GameObject("ChatDisplay");
-            displayObj.transform.SetParent(go.transform, false);
-
-            var displayRect = displayObj.AddComponent<RectTransform>();
-            displayRect.anchorMin = new Vector2(0, 0.3f);
-            displayRect.anchorMax = new Vector2(1, 1);
-            displayRect.offsetMin = Vector2.zero;
-            displayRect.offsetMax = Vector2.zero;
-
-            chatDisplay = displayObj.AddComponent<Text>();
-            chatDisplay.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            chatDisplay.fontSize = 18;
-            chatDisplay.color = Color.white;
-            chatDisplay.alignment = TextAnchor.UpperLeft;
-            chatDisplay.horizontalOverflow = HorizontalWrapMode.Wrap;
-            chatDisplay.verticalOverflow = VerticalWrapMode.Overflow;
-            chatDisplay.text = "";
-
-            var inputObj = new GameObject("ChatInput");
-            inputObj.transform.SetParent(go.transform, false);
-
-            var inputRect = inputObj.AddComponent<RectTransform>();
-            inputRect.anchorMin = new Vector2(0, 0);
-            inputRect.anchorMax = new Vector2(1, 0.3f);
-            inputRect.offsetMin = Vector2.zero;
-            inputRect.offsetMax = Vector2.zero;
-
-            chatInput = inputObj.AddComponent<InputField>();
-
-            var inputTextObj = new GameObject("InputText");
-            inputTextObj.transform.SetParent(inputObj.transform, false);
-
-            var inputTextRect = inputTextObj.AddComponent<RectTransform>();
-            inputTextRect.anchorMin = Vector2.zero;
-            inputTextRect.anchorMax = Vector2.one;
-            inputTextRect.offsetMin = Vector2.zero;
-            inputTextRect.offsetMax = Vector2.zero;
-
-            var inputText = inputTextObj.AddComponent<Text>();
-            inputText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            inputText.fontSize = 18;
-            inputText.color = Color.white;
-            inputText.alignment = TextAnchor.MiddleLeft;
-
-            chatInput.textComponent = inputText;
-            chatInput.lineType = InputField.LineType.SingleLine;
-            chatInput.interactable = false;  
-            chatInput.gameObject.SetActive(false);
-
-            Instance = go.AddComponent<CustomChatBox>();
+            else if (text.StartsWith("/party")) HandlePartyCommand(text, clientId);
+            else if (text.StartsWith("/chat")) HandleChatCommand(text);
+            else if (text.StartsWith("/net")) HandleNetCommand(text);
+            else if (text.StartsWith("/help")) HandleHelpCommand();
+            else ChatBox.Instance.SendMessage(text);
         }
 
-        public void AppendMessage(string text)
-        {
-            ChatBox.Instance.SendMessage(text);
-        }
-
-        private void DisableNativeChatBox()
+        public static void DisableNativeChatBox()
         {
             var realChat = GameObject.FindObjectOfType<ChatBox>();
             if (realChat != null && realChat.inputField != null)
@@ -136,5 +81,47 @@
             }
         }
 
+        public static void ChatEnable(bool visible)
+        {
+            if (Instance == null)
+            {
+                Debug.LogWarning("[CustomChatBox] Instance not ready yet.");
+                return;
+            }
+            Instance.gameObject.SetActive(visible);
+        }
+
+
+
+        public static void AppendCustomMessage(string text)
+        {
+            messages.Add(text);
+            if (messages.Count > 4) messages.RemoveAt(0);
+            if (messagesDisplay != null) messagesDisplay.text = string.Join("\n", messages);         
+            if (messagesInput != null) messagesInput.text = "";   
+        }
+
+        public static void HandleGMFChatPacket(string[] args)
+        {
+            string msg = string.Join(" ", args);
+            AppendCustomMessage(msg);
+        }
+
+        public static void SendSecuredMessage(string message)
+        {
+            string pseudo = SteamFriends.GetFriendPersonaName(new CSteamID(clientId));
+            pseudo = Regex.Replace(pseudo, "<.*?>", string.Empty);
+            string taggedMsg = $"[GMF] chat {pseudo}: {message}";
+
+            var packets = CreateGMFPacket(taggedMsg);
+
+            foreach (var user in connectedModUsers)
+            {
+                if (user.Key == clientId) continue;
+                SendGMFPacket(user.Key, packets);
+            }
+
+            AppendCustomMessage("(You) " + $"{pseudo}: {message}");
+        }
     }
 }

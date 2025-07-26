@@ -1,7 +1,6 @@
 ﻿using BepInEx.IL2CPP.Utils.Collections;
 using static PartyMod.ModUserDiscoveryUtility;
 using static PartyMod.ModUserDiscovery;
-using System.Windows.Forms;
 
 namespace PartyMod
 {
@@ -29,8 +28,8 @@ namespace PartyMod
 
         float elapsedTime = 0f;
         float elapsedTimeLobbyLifetime = 0f;
-        float LOBBY_SCAN_INTERVAL = 2f;
-        float LOBBY_LIFETIME = 5f;
+        float LOBBY_SCAN_INTERVAL = 1f;
+        float LOBBY_LIFETIME = 7f;
 
         void Update()
         {
@@ -99,18 +98,26 @@ namespace PartyMod
 
                     if (modTag == "true" && ulong.TryParse(ownerTag, out ulong ownerId))
                     {
-                        if (ownerId != clientId && !modUsers.ContainsKey(ownerId))
+                        if (ownerId != clientId)
                         {
                             ModUserSyncManager.cleanupTimer = 0f;
-                            modUsers.Add(ownerId, 0f);
 
-                            string pseudo = SteamFriends.GetFriendPersonaName(new CSteamID(ownerId));
-                            pseudo = Regex.Replace(pseudo, "<.*?>", string.Empty);
-                            PartyChatManager.Instance.AppendSecret($"trying to connect to {pseudo}.");
+                            bool isNewDetection = !connectedModUsers.ContainsKey(ownerId) && !detectedModUsers.Contains(ownerId);
 
-                            Plugin.__instance.Log.LogInfo($"Found mod user: {ownerId}");
+                            if (isNewDetection)
+                            {
+                                connectedModUsers.Add(ownerId, 0f);
+                                detectedModUsers.Add(ownerId);
+
+                                string pseudo = SteamFriends.GetFriendPersonaName(new CSteamID(ownerId));
+                                pseudo = Regex.Replace(pseudo, "<.*?>", string.Empty);
+                                CustomChatboxUtility.AppendCustomMessage($"trying to connect to {pseudo}.");
+
+                                Plugin.__instance.Log.LogInfo($"Found mod user: {ownerId}");
+                            }
                         }
                     }
+
                 }
                 catch { }
             }

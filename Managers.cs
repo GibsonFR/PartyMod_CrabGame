@@ -3,14 +3,13 @@
     public static class Managers
     {
         public static readonly Type[] ManagerTypes =
-        {
+        [
             typeof(PartySyncManager),
-            typeof(PartyChatManager),
             typeof(ModUserSyncManager),
             typeof(ModUserDiscovery),
             typeof(PartyModCoroutineRunner),
-            typeof(CustomChatBox),
-        };
+            typeof(CustomChatBoxManager),
+        ];
 
         public static void RegisterIl2CppMonoBehaviours()
         {

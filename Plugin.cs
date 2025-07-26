@@ -8,7 +8,6 @@ global using System.Linq;
 global using System.Text;
 global using UnityEngine;
 global using System.Text.RegularExpressions;
-global using TMPro;
 global using UnityEngine.UI;
 global using UnhollowerRuntimeLib;
 
@@ -30,7 +29,6 @@ namespace PartyMod
 
             Harmony.CreateAndPatchAll(typeof(Plugin));
             Harmony.CreateAndPatchAll(typeof(GMFPatches));
-            Harmony.CreateAndPatchAll(typeof(ChatPatches));
             Harmony.CreateAndPatchAll(typeof(ModUserDiscoveryPatches));
             Log.LogInfo("Mod created by Gibson, discord : gib_son");
 

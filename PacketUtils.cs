@@ -2,7 +2,7 @@
 
 namespace PartyMod
 {
-    public static class PacketUtils
+    public static class PacketUtility
     {
         private const float DuplicatePacketTimeout = 0.1f;
         private static byte[] _lastPacketHash;
