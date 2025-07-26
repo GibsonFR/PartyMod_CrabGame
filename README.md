@@ -22,3 +22,9 @@ commands :
 /party delete
 
 /party kick "username"
+
+/chat hide 
+
+/chat show
+
+/net force
