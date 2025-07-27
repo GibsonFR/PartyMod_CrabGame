@@ -4,11 +4,13 @@
     {
         public static readonly Type[] ManagerTypes =
         [
+            typeof(PartyManager),
             typeof(PartySyncManager),
-            typeof(ModUserSyncManager),
-            typeof(ModUserDiscovery),
+            typeof(ModUserHeartbeatManager),
+            typeof(ModUserFinder),
             typeof(PartyModCoroutineRunner),
-            typeof(CustomChatBoxManager),
+            typeof(ModUserChatManager),
+            typeof(GibsonNetworkManager),
         ];
 
         public static void RegisterIl2CppMonoBehaviours()

@@ -10,8 +10,9 @@ global using UnityEngine;
 global using System.Text.RegularExpressions;
 global using UnityEngine.UI;
 global using UnhollowerRuntimeLib;
+global using UnhollowerBaseLib;
+global using BepInEx.IL2CPP.Utils.Collections;
 
-global using static PartyMod.PartyUtility;
 global using static PartyMod.Utility;
 global using static PartyMod.Variables;
 
@@ -28,8 +29,7 @@ namespace PartyMod
             __instance = this;
 
             Harmony.CreateAndPatchAll(typeof(Plugin));
-            Harmony.CreateAndPatchAll(typeof(GMFPatches));
-            Harmony.CreateAndPatchAll(typeof(ModUserDiscoveryPatches));
+            Harmony.CreateAndPatchAll(typeof(ModUserFinderPatches));
             Log.LogInfo("Mod created by Gibson, discord : gib_son");
 
             Managers.RegisterIl2CppMonoBehaviours();

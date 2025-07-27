@@ -2,65 +2,61 @@
 {
     public class PartySyncManager : MonoBehaviour
     {
-        private float syncInterval = 1f;
-        private float timer = 0f;
+        
+        private const float SyncInterval = 5f;
+        private const float PartyListTimeout = 0.5f;
 
+        private float syncTimer = 0f;
+
+        public static string pendingPartyCreateName = null;
+        public static ulong pendingPartyCreateSelfId = 0;
+        public static bool pendingPartyNameExists = false;
+        public static float pendingPartyCreateTime = 0f;
 
         void Update()
         {
-            timer += Time.deltaTime;
-            if (timer >= syncInterval)
+            syncTimer += Time.deltaTime;
+
+            if (syncTimer >= SyncInterval)
             {
-                timer = 0f;
-                SyncPartyLobby();
+                syncTimer = 0f;
+                PartyManager.SyncPartyLobby();
             }
 
-            if (pendingPartyCreateName != null)
+            if (PartyManager.pendingPartyList && Time.realtimeSinceStartup - PartyManager.pendingPartyListTime > PartyListTimeout)
             {
-                if (Time.realtimeSinceStartup - pendingPartyCreateTime > 0.5f)
+                if (PartyManager.PublicPartyList.Count == 0)
                 {
-                    if (pendingPartyNameExists)
-                    {
-                        ForceMessage($"Party name '{pendingPartyCreateName}' already exists.");
-                    }
-                    else if (CreateParty(pendingPartyCreateSelfId, pendingPartyCreateName, pendingPartyIsPrivate))
-                    {
-                        JoinParty(pendingPartyCreateSelfId, pendingPartyCreateName); 
-                        ForceMessage($"Party '{pendingPartyCreateName}' created.");
-                    }
-                    else
-                    {
-                        ForceMessage($"Party name '{pendingPartyCreateName}' already exists.");
-                    }
-
-                    pendingPartyCreateName = null;
-                    pendingPartyCreateSelfId = 0;
-                    pendingPartyNameExists = false;
-                    pendingPartyCreateTime = 0;
+                    ModUserChatUtility.AppendCustomMessage("No public parties found.");
                 }
-            }
-
-            if (pendingPartyLeave && Time.realtimeSinceStartup - pendingPartyLeaveTime > 0.5f)
-            {
-                ForceMessage($"Leave request failed for party '{pendingPartyLeaveName}'. Host did not respond.");
-                pendingPartyLeave = false;
-                pendingPartyLeaveName = null;
-            }
-
-            if (pendingPartyList)
-            {
-                if (UnityEngine.Time.realtimeSinceStartup - pendingPartyListTime > 0.3f)
+                else
                 {
-                    if (collectedPartyNames.Count == 0) ForceMessage("No parties found.");
-                    else ForceMessage("Parties: " + string.Join(", ", collectedPartyNames));
-
-                    pendingPartyList = false;
-                    pendingPartyListTime = 0;
-                    collectedPartyNames.Clear();
+                    ModUserChatUtility.AppendCustomMessage($"Parties: {string.Join(", ", PartyManager.PublicPartyList)}");
                 }
+
+                PartyManager.pendingPartyList = false;
+                PartyManager.PublicPartyList.Clear();
             }
 
+            if (pendingPartyCreateName != null && Time.realtimeSinceStartup - pendingPartyCreateTime > 0.5f)
+            {
+                if (pendingPartyNameExists)
+                {
+                    ModUserChatUtility.AppendCustomMessage($"Party name '{pendingPartyCreateName}' already exists.");
+                }
+                else
+                {
+                    PartyManager.CreateParty(pendingPartyCreateSelfId, pendingPartyCreateName, false);
+                    ModUserChatUtility.AppendCustomMessage($"Party '{pendingPartyCreateName}' created successfully.");
+                }
+
+                // Reset pending
+                pendingPartyCreateName = null;
+                pendingPartyCreateSelfId = 0;
+                pendingPartyNameExists = false;
+            }
 
         }
+
     }
 }

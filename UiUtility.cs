@@ -65,7 +65,7 @@ namespace PartyMod
 
     public static class ChatBoxBuilder
     {
-        private static CustomChatBoxManager Instance;
+        private static ModUserChatManager Instance;
         private static Text messagesDisplay;
         private static InputField messagesInput;
 
@@ -103,11 +103,11 @@ namespace PartyMod
             var inputText = AddText(inputTextObj, 18, Color.white, TextAnchor.UpperLeft);
             messagesInput = AddInputField(inputObj, inputText, InputField.LineType.MultiLineNewline);
 
-            CustomChatBoxManager.messagesDisplay = messagesDisplay;
-            CustomChatBoxManager.messagesInput = messagesInput;
+            ModUserChatManager.messagesDisplay = messagesDisplay;
+            ModUserChatManager.messagesInput = messagesInput;
 
-            Instance = panel.AddComponent<CustomChatBoxManager>();
-            CustomChatBoxManager.Instance = Instance; 
+            Instance = panel.AddComponent<ModUserChatManager>();
+            ModUserChatManager.Instance = Instance; 
             Instance.gameObject.SetActive(true);
 
         }
@@ -115,7 +115,7 @@ namespace PartyMod
 
     public static class InputFieldBuilder
     {
-        private static CustomChatBoxManager Instance;
+        private static ModUserChatManager Instance;
         private static Text inputField;
         private static InputField chatInput;
 
@@ -154,10 +154,10 @@ namespace PartyMod
             chatInput.interactable = false;
             chatInput.gameObject.SetActive(false);
 
-            CustomChatBoxManager.inputField = inputField;
-            CustomChatBoxManager.chatInput = chatInput;
+            ModUserChatManager.inputField = inputField;
+            ModUserChatManager.chatInput = chatInput;
 
-            Instance = panel.AddComponent<CustomChatBoxManager>();
+            Instance = panel.AddComponent<ModUserChatManager>();
 
         }
     }
